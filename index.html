@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro Lavoro - GitHub Sync</title>
+    <title>Registro Lavoro</title>
     <style>
         /* INCOLLA TUTTI GLI STILI CSS CHE TI HO DATO PRIMA */
         * {
@@ -149,342 +149,99 @@
 <body>
     <div class="container">
         <header>
-            <h1>📊 Registro Lavoro - GitHub Sync</h1>
-            <p>I dati salvati direttamente sul tuo repository GitHub</p>
+            <h1>📊 Registro Lavoro</h1>
         </header>
 
-        <!-- Sezione configurazione GitHub -->
-        <section id="configSection" class="config-section">
-            <h2>⚙️ Configurazione GitHub</h2>
-            
-            <div class="github-info">
-                <p><strong>Come ottenere il Token:</strong></p>
-                <ol>
-                    <li>Vai su GitHub → Settings → Developer settings</li>
-                    <li>Personal access tokens → Tokens (classic)</li>
-                    <li>Crea nuovo token con scopo <strong>"repo"</strong></li>
-                    <li>Copia il token generato</li>
-                </ol>
-            </div>
-
-            <div class="form-group">
-                <label for="githubToken">Token GitHub:</label>
-                <input type="password" id="githubToken" placeholder="Incolla il tuo token GitHub">
-            </div>
-            
-            <div class="form-group">
-                <label for="repoName">Repository Name:</label>
-                <input type="text" id="repoName" placeholder="es: ale208-tech/registro-lavoro" value="ale208-tech/registro-lavoro">
-            </div>
-            
-            <button id="saveConfigBtn" class="btn-success">Salva Configurazione</button>
-            <div id="configAlert" class="alert alert-info"></div>
-        </section>
-
-        <!-- Sezione principale -->
-        <section id="mainSection" class="main-section hidden">
-            <button id="logoutBtn" class="logout-btn">Logout</button>
-            <h2>👋 Benvenuto!</h2>
-            
-            <!-- Form per aggiungere lavoro -->
+        <section class="main-section">
+            <!-- Form lavoro -->
             <div class="form-group">
                 <h3>➕ Aggiungi Giorno di Lavoro</h3>
-                <label for="workDate">Data:</label>
                 <input type="date" id="workDate">
-                
-                <label for="dailyPay">Paga Giornaliera (€):</label>
-                <input type="number" id="dailyPay" placeholder="Inserisci la paga" min="0" step="0.01">
-                
-                <label for="workNotes">Note:</label>
-                <textarea id="workNotes" placeholder="Cosa hai fatto oggi..."></textarea>
-                
-                <button id="addWorkDayBtn" class="btn-success">Aggiungi Giorno</button>
-                <div id="addAlert" class="alert alert-success hidden"></div>
+                <input type="number" id="dailyPay" placeholder="Paga giornaliera €">
+                <textarea id="workNotes" placeholder="Note..."></textarea>
+                <button id="addWorkDayBtn">Aggiungi Giorno</button>
             </div>
             
-            <!-- Sincronizzazione GitHub -->
+            <!-- Sincronizzazione -->
             <div class="form-group">
-                <h3>🔄 Sincronizzazione GitHub</h3>
-                <button id="loadFromGitHubBtn" class="btn-warning">📥 Carica da GitHub</button>
-                <button id="saveToGitHubBtn" class="btn-success">📤 Salva su GitHub</button>
-                <div id="syncAlert" class="alert alert-info hidden"></div>
+                <h3>🔄 Sincronizzazione</h3>
+                <button id="exportBtn">📤 Esporta Dati</button>
+                <button id="importBtn">📥 Importa Dati</button>
+                <input type="file" id="importFile" style="display:none">
             </div>
             
             <!-- Storico -->
-            <div class="work-days-list">
-                <h3>📅 Storico Giorni di Lavoro</h3>
-                <div id="workDaysList"></div>
-                
-                <div id="totalSection" class="total-section hidden">
-                    <h3>💰 Riepilogo</h3>
-                    <p>Totale giorni: <span id="totalDays">0</span></p>
-                    <p>Guadagno totale: €<span id="totalEarnings">0.00</span></p>
-                </div>
-            </div>
+            <div id="workDaysList"></div>
         </section>
     </div>
 
     <script>
-        // Elementi DOM
-        const configSection = document.getElementById('configSection');
-        const mainSection = document.getElementById('mainSection');
-        const githubTokenInput = document.getElementById('githubToken');
-        const repoNameInput = document.getElementById('repoName');
-        const saveConfigBtn = document.getElementById('saveConfigBtn');
-        const configAlert = document.getElementById('configAlert');
-        const logoutBtn = document.getElementById('logoutBtn');
+        // CODICE SEMPLIFICATO SENZA GITHUB API
         const workDate = document.getElementById('workDate');
         const dailyPay = document.getElementById('dailyPay');
         const workNotes = document.getElementById('workNotes');
         const addWorkDayBtn = document.getElementById('addWorkDayBtn');
-        const addAlert = document.getElementById('addAlert');
-        const loadFromGitHubBtn = document.getElementById('loadFromGitHubBtn');
-        const saveToGitHubBtn = document.getElementById('saveToGitHubBtn');
-        const syncAlert = document.getElementById('syncAlert');
+        const exportBtn = document.getElementById('exportBtn');
+        const importBtn = document.getElementById('importBtn');
+        const importFile = document.getElementById('importFile');
         const workDaysList = document.getElementById('workDaysList');
-        const totalSection = document.getElementById('totalSection');
-        const totalDays = document.getElementById('totalDays');
-        const totalEarnings = document.getElementById('totalEarnings');
 
-        // Variabili globali
-        let githubToken = null;
-        let repoName = null;
+        workDate.value = new Date().toISOString().split('T')[0];
 
-        // Inizializzazione
-        document.addEventListener('DOMContentLoaded', function() {
-            workDate.value = new Date().toISOString().split('T')[0];
-            
-            // Carica configurazione salvata
-            githubToken = localStorage.getItem('githubToken');
-            repoName = localStorage.getItem('repoName') || 'ale208-tech/registro-lavoro';
-            
-            if (githubToken && repoName) {
-                repoNameInput.value = repoName;
-                configSection.classList.add('hidden');
-                mainSection.classList.remove('hidden');
-                loadUserData();
-            }
-            
-            setupEventListeners();
-        });
-
-        function setupEventListeners() {
-            saveConfigBtn.addEventListener('click', saveConfig);
-            logoutBtn.addEventListener('click', logout);
-            addWorkDayBtn.addEventListener('click', addWorkDay);
-            loadFromGitHubBtn.addEventListener('click', loadFromGitHub);
-            saveToGitHubBtn.addEventListener('click', saveToGitHub);
-        }
-
-        function saveConfig() {
-            githubToken = githubTokenInput.value.trim();
-            repoName = repoNameInput.value.trim();
-            
-            if (!githubToken) {
-                showAlert(configAlert, 'Inserisci il token GitHub', 'error');
-                return;
-            }
-            
-            if (!repoName) {
-                showAlert(configAlert, 'Inserisci il nome del repository', 'error');
-                return;
-            }
-            
-            localStorage.setItem('githubToken', githubToken);
-            localStorage.setItem('repoName', repoName);
-            
-            configSection.classList.add('hidden');
-            mainSection.classList.remove('hidden');
-            loadUserData();
-            
-            showAlert(configAlert, 'Configurazione salvata!', 'success');
-        }
-
-        function logout() {
-            localStorage.removeItem('githubToken');
-            localStorage.removeItem('repoName');
-            localStorage.removeItem('workData');
-            mainSection.classList.add('hidden');
-            configSection.classList.remove('hidden');
-            githubTokenInput.value = '';
-        }
-
-        function addWorkDay() {
-            const date = workDate.value;
-            const pay = parseFloat(dailyPay.value);
-            const notes = workNotes.value.trim();
-            
-            if (!date || isNaN(pay) || pay <= 0) {
-                alert('Inserisci data e paga validi');
-                return;
-            }
-            
+        addWorkDayBtn.addEventListener('click', () => {
             const workDay = {
                 id: Date.now(),
-                date: date,
-                pay: pay,
-                notes: notes
+                date: workDate.value,
+                pay: parseFloat(dailyPay.value),
+                notes: workNotes.value
             };
             
             const userData = JSON.parse(localStorage.getItem('workData')) || [];
             userData.push(workDay);
             localStorage.setItem('workData', JSON.stringify(userData));
             
-            showAlert(addAlert, '✅ Giorno aggiunto!', 'success');
             dailyPay.value = '';
             workNotes.value = '';
             loadUserData();
-        }
+            alert('✅ Giorno aggiunto!');
+        });
 
-        async function saveToGitHub() {
-            if (!githubToken || !repoName) {
-                showAlert(syncAlert, 'Configura prima GitHub', 'error');
-                return;
-            }
-            
-            try {
-                showAlert(syncAlert, '📤 Salvando su GitHub...', 'info');
-                
-                const userData = JSON.parse(localStorage.getItem('workData')) || [];
-                const content = btoa(JSON.stringify(userData, null, 2));
-                
-                // Controlla se il file esiste già
-                let sha = null;
-                try {
-                    const existingFile = await githubApiRequest(`/repos/${repoName}/contents/work-data.json`);
-                    sha = existingFile.sha;
-                } catch (error) {
-                    // File non esiste, va bene
-                }
-                
-                // Salva il file
-                const response = await githubApiRequest(`/repos/${repoName}/contents/work-data.json`, {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        message: `Aggiornamento dati lavoro - ${new Date().toISOString()}`,
-                        content: content,
-                        sha: sha
-                    })
-                });
-                
-                showAlert(syncAlert, '✅ Dati salvati su GitHub!', 'success');
-                
-            } catch (error) {
-                showAlert(syncAlert, '❌ Errore: ' + error.message, 'error');
-                console.error('GitHub error:', error);
-            }
-        }
+        exportBtn.addEventListener('click', () => {
+            const userData = JSON.parse(localStorage.getItem('workData')) || [];
+            const dataStr = JSON.stringify(userData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'registro-lavoro.json';
+            a.click();
+            alert('📤 Dati esportati!');
+        });
 
-        async function loadFromGitHub() {
-            if (!githubToken || !repoName) {
-                showAlert(syncAlert, 'Configura prima GitHub', 'error');
-                return;
-            }
-            
-            try {
-                showAlert(syncAlert, '📥 Caricando da GitHub...', 'info');
-                
-                const response = await githubApiRequest(`/repos/${repoName}/contents/work-data.json`);
-                const content = atob(response.content);
-                const userData = JSON.parse(content);
-                
-                localStorage.setItem('workData', JSON.stringify(userData));
-                showAlert(syncAlert, '✅ Dati caricati da GitHub!', 'success');
+        importBtn.addEventListener('click', () => importFile.click());
+        importFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                localStorage.setItem('workData', e.target.result);
                 loadUserData();
-                
-            } catch (error) {
-                if (error.message.includes('404')) {
-                    showAlert(syncAlert, 'ℹ️ Nessun dato trovato su GitHub. Salva prima i dati.', 'info');
-                } else {
-                    showAlert(syncAlert, '❌ Errore: ' + error.message, 'error');
-                }
-            }
-        }
-
-        async function githubApiRequest(endpoint, options = {}) {
-            const url = `https://api.github.com${endpoint}`;
-            
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `token ${githubToken}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json',
-                },
-                ...options
-            });
-            
-            if (!response.ok) {
-                throw new Error(`GitHub API: ${response.status} ${response.statusText}`);
-            }
-            
-            return await response.json();
-        }
+                alert('✅ Dati importati!');
+            };
+            reader.readAsText(file);
+        });
 
         function loadUserData() {
             const userData = JSON.parse(localStorage.getItem('workData')) || [];
-            
-            userData.sort((a, b) => new Date(b.date) - new Date(a.date));
-            workDaysList.innerHTML = '';
-            
-            let totalDaysCount = 0;
-            let totalEarningsCount = 0;
-            
-            if (userData.length === 0) {
-                workDaysList.innerHTML = '<p>Nessun giorno di lavoro registrato.</p>';
-                totalSection.classList.add('hidden');
-                return;
-            }
-            
-            userData.forEach(day => {
-                const dayElement = document.createElement('div');
-                dayElement.className = 'work-day';
-                
-                const dateObj = new Date(day.date);
-                const formattedDate = dateObj.toLocaleDateString('it-IT', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                
-                dayElement.innerHTML = `
-                    <button class="delete-btn" onclick="deleteWorkDay(${day.id})">Elimina</button>
-                    <h3>${formattedDate}</h3>
-                    <p><strong>Paga:</strong> €${day.pay.toFixed(2)}</p>
-                    <p><strong>Note:</strong> ${day.notes || 'Nessuna nota'}</p>
-                `;
-                
-                workDaysList.appendChild(dayElement);
-                totalDaysCount++;
-                totalEarningsCount += day.pay;
-            });
-            
-            totalSection.classList.remove('hidden');
-            totalDays.textContent = totalDaysCount;
-            totalEarnings.textContent = totalEarningsCount.toFixed(2);
+            workDaysList.innerHTML = userData.map(day => `
+                <div class="work-day">
+                    <h3>${new Date(day.date).toLocaleDateString('it-IT')}</h3>
+                    <p>Paga: €${day.pay}</p>
+                    <p>Note: ${day.notes}</p>
+                </div>
+            `).join('');
         }
 
-        function deleteWorkDay(workDayId) {
-            const userData = JSON.parse(localStorage.getItem('workData')) || [];
-            const updatedData = userData.filter(day => day.id !== workDayId);
-            localStorage.setItem('workData', JSON.stringify(updatedData));
-            loadUserData();
-        }
-
-        function showAlert(alertElement, message, type) {
-            alertElement.textContent = message;
-            alertElement.className = `alert alert-${type}`;
-            alertElement.classList.remove('hidden');
-            
-            if (type !== 'error') {
-                setTimeout(() => {
-                    alertElement.classList.add('hidden');
-                }, 5000);
-            }
-        }
-
-        // Funzioni globali
-        window.deleteWorkDay = deleteWorkDay;
+        loadUserData();
     </script>
 </body>
 </html>
