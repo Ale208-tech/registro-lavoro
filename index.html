@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro Lavoro</title>
+    <title>Registro Lavoro - Sincronizzazione Manuale</title>
     <style>
-        /* INCOLLA TUTTI GLI STILI CSS CHE TI HO DATO PRIMA */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -34,7 +33,7 @@
             border-radius: 8px;
         }
         
-        .config-section, .main-section {
+        .main-section {
             background-color: white;
             padding: 25px;
             border-radius: 8px;
@@ -46,8 +45,12 @@
             display: none;
         }
         
-        .form-group {
+        h1, h2, h3 {
             margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
         }
         
         label {
@@ -58,10 +61,16 @@
         
         input, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
         
         button {
@@ -69,19 +78,32 @@
             color: white;
             border: none;
             padding: 12px 20px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
             margin-right: 10px;
             margin-bottom: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
         }
         
         .btn-success {
             background-color: #2ecc71;
         }
         
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
         .btn-warning {
             background-color: #f39c12;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d35400;
         }
         
         .work-day {
@@ -89,7 +111,7 @@
             border-left: 4px solid #3498db;
             padding: 15px;
             margin-bottom: 15px;
-            border-radius: 4px;
+            border-radius: 6px;
             position: relative;
         }
         
@@ -101,48 +123,37 @@
             color: white;
             border: none;
             padding: 5px 10px;
-            border-radius: 3px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
         }
         
         .total-section {
             background-color: #ecf0f1;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
         }
         
         .alert {
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 15px;
-            border-radius: 4px;
+            border-radius: 6px;
+            border-left: 4px solid;
         }
         
         .alert-success {
             background-color: #e8f5e9;
             color: #2e7d32;
-            border-left: 4px solid #2e7d32;
+            border-left-color: #2e7d32;
         }
         
-        .alert-error {
-            background-color: #ffebee;
-            color: #c62828;
-            border-left: 4px solid #c62828;
-        }
-        
-        .alert-info {
-            background-color: #e3f2fd;
-            color: #1565c0;
-            border-left: 4px solid #1565c0;
-        }
-        
-        .github-info {
-            background-color: #f3f4f6;
-            border-left: 4px solid #24292e;
+        .sync-section {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
             padding: 15px;
             margin-bottom: 20px;
-            border-radius: 4px;
+            border-radius: 6px;
         }
     </style>
 </head>
@@ -150,98 +161,255 @@
     <div class="container">
         <header>
             <h1>📊 Registro Lavoro</h1>
+            <p>Sincronizzazione manuale tra dispositivi</p>
         </header>
 
         <section class="main-section">
-            <!-- Form lavoro -->
+            <!-- Form per aggiungere lavoro -->
             <div class="form-group">
                 <h3>➕ Aggiungi Giorno di Lavoro</h3>
+                <label for="workDate">Data:</label>
                 <input type="date" id="workDate">
-                <input type="number" id="dailyPay" placeholder="Paga giornaliera €">
-                <textarea id="workNotes" placeholder="Note..."></textarea>
-                <button id="addWorkDayBtn">Aggiungi Giorno</button>
+                
+                <label for="dailyPay">Paga Giornaliera (€):</label>
+                <input type="number" id="dailyPay" placeholder="Inserisci la paga giornaliera" min="0" step="0.01">
+                
+                <label for="workNotes">Note sul lavoro svolto:</label>
+                <textarea id="workNotes" placeholder="Descrivi cosa hai fatto oggi..."></textarea>
+                
+                <button id="addWorkDayBtn" class="btn-success">Aggiungi Giorno</button>
+                <div id="addAlert" class="alert alert-success hidden">Giorno aggiunto con successo!</div>
             </div>
             
-            <!-- Sincronizzazione -->
-            <div class="form-group">
-                <h3>🔄 Sincronizzazione</h3>
-                <button id="exportBtn">📤 Esporta Dati</button>
-                <button id="importBtn">📥 Importa Dati</button>
-                <input type="file" id="importFile" style="display:none">
+            <!-- Sincronizzazione Manuale -->
+            <div class="sync-section">
+                <h3>🔄 Sincronizzazione tra Dispositivi</h3>
+                <p><strong>Come sincronizzare:</strong></p>
+                <ol>
+                    <li>📤 <strong>Esporta</strong> i dati dal dispositivo corrente</li>
+                    <li>💾 Salva il file su Google Drive, Email o WhatsApp</li>
+                    <li>📥 <strong>Importa</strong> il file sull'altro dispositivo</li>
+                </ol>
+                
+                <button id="exportBtn" class="btn-success">📤 Esporta Dati (JSON)</button>
+                <button id="importBtn" class="btn-warning">📥 Importa Dati</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+                
+                <div id="syncAlert" class="alert alert-info hidden"></div>
             </div>
             
             <!-- Storico -->
-            <div id="workDaysList"></div>
+            <div class="work-days-list">
+                <h3>📅 Storico Giorni di Lavoro</h3>
+                <div id="workDaysList"></div>
+                
+                <div id="totalSection" class="total-section">
+                    <h3>💰 Riepilogo</h3>
+                    <p><strong>Totale giorni lavorati:</strong> <span id="totalDays">0</span></p>
+                    <p><strong>Guadagno totale:</strong> €<span id="totalEarnings">0.00</span></p>
+                </div>
+            </div>
         </section>
     </div>
 
     <script>
-        // CODICE SEMPLIFICATO SENZA GITHUB API
+        // Elementi DOM
         const workDate = document.getElementById('workDate');
         const dailyPay = document.getElementById('dailyPay');
         const workNotes = document.getElementById('workNotes');
         const addWorkDayBtn = document.getElementById('addWorkDayBtn');
+        const addAlert = document.getElementById('addAlert');
         const exportBtn = document.getElementById('exportBtn');
         const importBtn = document.getElementById('importBtn');
         const importFile = document.getElementById('importFile');
+        const syncAlert = document.getElementById('syncAlert');
         const workDaysList = document.getElementById('workDaysList');
+        const totalSection = document.getElementById('totalSection');
+        const totalDays = document.getElementById('totalDays');
+        const totalEarnings = document.getElementById('totalEarnings');
 
-        workDate.value = new Date().toISOString().split('T')[0];
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            // Imposta la data di oggi come predefinita
+            workDate.value = new Date().toISOString().split('T')[0];
+            
+            // Carica i dati salvati
+            loadUserData();
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
 
-        addWorkDayBtn.addEventListener('click', () => {
+        function setupEventListeners() {
+            addWorkDayBtn.addEventListener('click', addWorkDay);
+            exportBtn.addEventListener('click', exportData);
+            importBtn.addEventListener('click', () => importFile.click());
+            importFile.addEventListener('change', importData);
+            
+            // Tasto Enter per aggiungere rapidamente
+            dailyPay.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addWorkDay();
+            });
+        }
+
+        function addWorkDay() {
+            const date = workDate.value;
+            const pay = parseFloat(dailyPay.value);
+            const notes = workNotes.value.trim();
+            
+            // Validazione
+            if (!date || isNaN(pay) || pay <= 0) {
+                alert('❌ Per favore, inserisci una data valida e una paga maggiore di 0.');
+                return;
+            }
+            
             const workDay = {
-                id: Date.now(),
-                date: workDate.value,
-                pay: parseFloat(dailyPay.value),
-                notes: workNotes.value
+                id: Date.now(), // ID univoco
+                date: date,
+                pay: pay,
+                notes: notes
             };
             
+            // Salva nei dati locali
             const userData = JSON.parse(localStorage.getItem('workData')) || [];
             userData.push(workDay);
             localStorage.setItem('workData', JSON.stringify(userData));
             
+            // Mostra conferma
+            showAlert(addAlert, '✅ Giorno di lavoro aggiunto con successo!', 'success');
+            
+            // Pulisci i campi (tranne la data)
             dailyPay.value = '';
             workNotes.value = '';
+            
+            // Aggiorna la vista
             loadUserData();
-            alert('✅ Giorno aggiunto!');
-        });
+        }
 
-        exportBtn.addEventListener('click', () => {
+        function exportData() {
             const userData = JSON.parse(localStorage.getItem('workData')) || [];
+            
+            if (userData.length === 0) {
+                showAlert(syncAlert, 'ℹ️ Nessun dato da esportare.', 'info');
+                return;
+            }
+            
+            // Crea il file JSON
             const dataStr = JSON.stringify(userData, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'registro-lavoro.json';
-            a.click();
-            alert('📤 Dati esportati!');
-        });
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            // Crea link per il download
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `registro-lavoro-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showAlert(syncAlert, '📤 Dati esportati! Salva il file e invialo agli altri dispositivi.', 'success');
+        }
 
-        importBtn.addEventListener('click', () => importFile.click());
-        importFile.addEventListener('change', (e) => {
-            const file = e.target.files[0];
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
             const reader = new FileReader();
-            reader.onload = (e) => {
-                localStorage.setItem('workData', e.target.result);
-                loadUserData();
-                alert('✅ Dati importati!');
+            reader.onload = function(e) {
+                try {
+                    const userData = JSON.parse(e.target.result);
+                    
+                    // Validazione base
+                    if (!Array.isArray(userData)) {
+                        throw new Error('Formato file non valido');
+                    }
+                    
+                    // Sostituisci i dati esistenti
+                    localStorage.setItem('workData', JSON.stringify(userData));
+                    loadUserData();
+                    
+                    showAlert(syncAlert, '✅ Dati importati con successo!', 'success');
+                    
+                } catch (error) {
+                    showAlert(syncAlert, '❌ Errore: file non valido o corrotto.', 'error');
+                }
             };
+            
             reader.readAsText(file);
-        });
+            // Reset input file
+            event.target.value = '';
+        }
 
         function loadUserData() {
             const userData = JSON.parse(localStorage.getItem('workData')) || [];
-            workDaysList.innerHTML = userData.map(day => `
-                <div class="work-day">
-                    <h3>${new Date(day.date).toLocaleDateString('it-IT')}</h3>
-                    <p>Paga: €${day.pay}</p>
-                    <p>Note: ${day.notes}</p>
-                </div>
-            `).join('');
+            
+            // Ordina per data (dal più recente)
+            userData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Pulisci la lista
+            workDaysList.innerHTML = '';
+            
+            let totalDaysCount = 0;
+            let totalEarningsCount = 0;
+            
+            if (userData.length === 0) {
+                workDaysList.innerHTML = '<p>Nessun giorno di lavoro registrato. Aggiungi il primo giorno!</p>';
+                totalSection.style.display = 'none';
+                return;
+            }
+            
+            // Mostra ogni giorno di lavoro
+            userData.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'work-day';
+                
+                // Formatta la data in italiano
+                const dateObj = new Date(day.date);
+                const formattedDate = dateObj.toLocaleDateString('it-IT', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                dayElement.innerHTML = `
+                    <button class="delete-btn" onclick="deleteWorkDay(${day.id})">Elimina</button>
+                    <h3>${formattedDate}</h3>
+                    <p><strong>Paga:</strong> €${day.pay.toFixed(2)}</p>
+                    <p><strong>Note:</strong> ${day.notes || 'Nessuna nota'}</p>
+                `;
+                
+                workDaysList.appendChild(dayElement);
+                
+                // Aggiorna i totali
+                totalDaysCount++;
+                totalEarningsCount += day.pay;
+            });
+            
+            // Aggiorna il riepilogo
+            totalSection.style.display = 'block';
+            totalDays.textContent = totalDaysCount;
+            totalEarnings.textContent = totalEarningsCount.toFixed(2);
         }
 
-        loadUserData();
+        function deleteWorkDay(workDayId) {
+            const userData = JSON.parse(localStorage.getItem('workData')) || [];
+            const updatedData = userData.filter(day => day.id !== workDayId);
+            localStorage.setItem('workData', JSON.stringify(updatedData));
+            loadUserData();
+        }
+
+        function showAlert(alertElement, message, type) {
+            alertElement.textContent = message;
+            alertElement.className = `alert alert-${type}`;
+            alertElement.classList.remove('hidden');
+            
+            // Auto-rimuovi dopo 5 secondi
+            setTimeout(() => {
+                alertElement.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Rendere le funzioni disponibili globalmente
+        window.deleteWorkDay = deleteWorkDay;
+        window.loadUserData = loadUserData;
     </script>
 </body>
 </html>
